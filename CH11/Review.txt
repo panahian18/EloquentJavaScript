@@ -1,0 +1,25 @@
+		Ch. 11 Asyncrhoncity
+
+In an asyncrhonous program, when an action is started, the program continues to run, when the action finishes then the program is informed and gets the results.
+
+Consider a program that fethces two resources from a network, that then combines the results. In a synchronous program, the results are fetched consecutively, then combined. This is a very inefficient method of execution, therefore two threads of exection are normally used.
+
+In the asyncrhonous model, starting a network action conceptually causes a split in the timeline. The program that caused the action conitnues running, and the action happens alongside modifying the program when it is finished. 
+
+
+	// Callbacks
+
+One approach to asynchronous programming is to take a slow function and give it an extra argument, a callback function. The action starts and when it finishes, it calls the callback function with its result. setTimeout waits a few miliseconds and then calls a function.
+
+setTimeout(() => console.log("Tick"), 500);
+
+We can also chain multiple callback functions that require time to complete their action. Eg. fetching data from the data source takes time.
+
+import {bigOak} from "crow-tech";
+
+bigOak.storage("food caches", caches => {
+	let firstCache = caches[0];
+	bigOak.storage("firstCache', info =>
+	console.log(info);
+	});
+});
