@@ -25,7 +25,7 @@
     // Callbacks
 
 // One approach to asyncrhonous programming is to take a slow function and give
-// an extra argument, a callback function. The action starts and when it finishes
+// as an extra argument, a callback function. The action starts and when it finishes
 // the callback function is called with the result. setTimeout waits a few miliseconds
 // and then calls a function.
 
@@ -66,7 +66,7 @@ defineRequestType("note", (nest, content, source, done) => {  // This function t
 });
 
 // done() is a callback function that it must call when it is done with the
-// request. We could have used the functions return value as a response, but then
+// request. We could have used the function's return value as a response, but then
 // it wouldn't be asyncrhonous. So we need another function (in this case done())
 // to let us know when it is finished, this way the handler is also asynchronous.
 
@@ -79,7 +79,7 @@ defineRequestType("note", (nest, content, source, done) => {  // This function t
 // future. Computations on promised values execute async. as they become available.
 
 // The easiest way to create a Promise is by calling Promise.resolve and passing
-// a value, it will wrap your value in a promise and return it.
+// a value, it will wrap your value in a resolved promise and return it.
 
   let fifteen = Promise.resolve(15);
   fifteen.then(value => console.log(`Got ${value}`));
@@ -154,7 +154,7 @@ new Promise((_, reject) => reject(new Error("Fail")))
 // Considering our send method from our Nest class mentioned previously, it is
 // reasonable to expect that messages that are sometimes sent might not be
 // received, so it is useful to make it try again if a sent message does not
-// receive a response and to stop give up after a while and report a failure.
+// receive a response and to stop and give up after a while and report a failure.
 
 // Sometimes when a request and response are successfully delivered, the reponse
 // may indicate failure, as is the case when the wrong type is used in
@@ -163,7 +163,7 @@ new Promise((_, reject) => reject(new Error("Fail")))
 class Timeout extends Error {};
 
 function request(nest, target, type, content) { // here we wrap the send method to handle possible timeouts
-  new Promise((resolve, reject) => {  // create a new promise to wrap the send method, takes 2 functions as args
+  new Promise((resolve, reject) => {  // create a new promise to wrap the send method, takes a function as arg
     let done = false;
     function attempt(n) { // create a separate function for our main action in order to call it again
       nest.send(target, type, content, (failed, value) => { // call nest.send as usual
@@ -198,7 +198,7 @@ function requestType(name, handler) {
 
     // Collections of Promises
 
-// Each nest has a array of other nests within transmission distance in an array
+// Each nest has an array of other nests within transmission distance in an array
 // called neighbors. We will write a function that sends a ping request to each
 // of them and see which comes back.
 
@@ -251,7 +251,7 @@ function sendGossip(nest, message, exceptFor=null) {
 }
 
 requestType("gossip", (nest, message, source) => {
-  if (nest.state.gossip.includes(message) return; // If the nest the message being sent to has the message then back out of the function
+  if (nest.state.gossip.includes(message)) return; // If the nest the message being sent to has the message then back out of the function
   console.log(`${nest.name} received gossip ${message} from ${source}`);  // Let caller know that the message was sent
   sendGossip(nest, message, source);  // Now we call the sendGossip function to allow us to send the message to all of nest's neighbors
 });
@@ -260,7 +260,7 @@ requestType("gossip", (nest, message, source) => {
 
 // If a given node wants to talk to a single other node, then flooding is not a
 // useful tool. We need to set up a way for messages to hop from node to node
-// until they reach their destination, so each node have to know about the entire
+// until they reach their destination, so each node has to know about the entire
 // network. To send a message to a far away node, it is necessary to know which
 // neighbor gets it closer to its destination.
 
@@ -301,7 +301,7 @@ everywhere(nest => {
 
 // The findRoute function, which resembles the findRoute function from chapter
 // 7, searches for a way to reach a given node in the network. But instead of
-// returning the whole route, it just retunrs the next step, that next nest, given
+// returning the whole route, it just returns the next step, that next nest, given
 // information about the network will iself decide where to send the message.
 
 function findRoute(from, to, connections) { // We are given a starting node (from) and a destination (to), along with all the nodes "from" is connected to
@@ -309,7 +309,7 @@ function findRoute(from, to, connections) { // We are given a starting node (fro
   for (let i = 0; i < work.length; i++) {
     let {at, via} = work[i]; // We will now consider the newest node in our path and determine the next node to go to
     for (let next of connections.get(at) || []) { // For the furthest node in our path, we will consider all of its connecting nodes
-        if (next == to) return via; // If any of the connecting nodes is our destination, then return our path
+        if (next == to) return via; // If any of the connecting nodes is our destination, then return the next node to take
         if (!work.some(w => w.at == next)) { // Only consider connecting nodes if they aren't already in our path (work)
           work.push({at: next, via: via || next}); // Now add all connecting nodes
         }
@@ -321,7 +321,6 @@ function findRoute(from, to, connections) { // We are given a starting node (fro
 // Now we will build a function that can send long-distance messages. If that
 // destination is a direct neighbour then it will deliver it as usual,
 // otherwise it will use the "route" request type, which uses findRoute.
-
 function routeRequest(nest, target, type, content) { // This function will build a route to our target then it will call "request" to send it
   if (nest.neighbors.includes(target)) {  // If we have a path to the target then simply use "request" to send it
       return request(nest, target, type, content);
@@ -338,12 +337,13 @@ requestType("route", (nest, target, type, content)) => { // This request calls t
 
     // Async functions
 
-// Imagine we want to store information of each node in every node
-
+// Imagine we want to store information of each node in every node.
 // Functions that use promises can still be difficult to understand. It would be
 // a lot easier to write async code synchronously, JavaScript allows us to
 // do this using the "async" keyword. An async function returns a promise and in
-// its "await" will await other promises in a way that looks syncrhonous.
+// its "await" will await other promises in a way that looks syncrhonous. That is,
+// the execution of the function will wait any time it reaches an "await" and
+// only continue when that promise is resolved.
 
 requestType("storage", (nest, name) => storage(nest, name));  // create a new request type that uses a storage function
 
@@ -378,7 +378,7 @@ async function findInRemoteStorage(nest, name) {
 // async functions return promises, when their body returns something, the
 // promise is resolved, and when they throw an exception, the promise is rejected.
 // Inside an async function, you can put "await" before any expression, which
-// prodcues a promise, and waits for that promise to resolve, and only then continue.
+// prodcues a promise, and waits for that promise to resolve, and only then continues.
 
     // Generators
 
@@ -416,9 +416,9 @@ Group.prototype[Symbol.iterator] = function*() {
 
     // The Event Loop
 
-// Async programs are executed piece by piece, each piece may start some some
-// actions and schedule code to be executed when the action finishes or fails.
-// In between these pieces, the program sits idle, waiting for the next action.
+// Async programs are executed piece by piece, each piece may start some actions
+// and schedule code to be executed when the action finishes or fails. In
+// between these pieces, the program sits idle, waiting for the next action.
 // Async behaviour happens on its own empty function stack, which makes
 // managing exceptions across asyncrhonous code hard.
 
@@ -430,12 +430,13 @@ try {
   // This will not run
   console.log("Caught");
 }
+// -> Woosh
 
 // Promises always resolve or reject as a new event. This event gets added to the
 // end of the event loop so it will get called after the current script finishes.
 
 Promise.resolve("Done").then(console.log);
-cconsole.log("Me First!");
+console.log("Me First!");
 // -> Me First!
 // -> Done
 
@@ -445,15 +446,44 @@ cconsole.log("Me First!");
 // the program makes itself. But asyncrhonous programs do create gaps in their
 // execution that can allow for other code to run.
 
-// Each nest in the network count the number of chicks that are born every year
-// nests store this count in the "storage" bulb.
+// Each nest in the network counts the number of chicks that are born every year,
+// nests then store this count in the "storage" bulb.
 
-// Retrive the information stored under "name", if not found then use routeRequest to send it.
+// Retrieve the information stored under "name", if not found then use routeRequest to send it.
 function anyStorage(nest, source, name) {
   if (source == nest.name) return storage(nest, name);
   else return routeRequest(nest, source, "storage", name);
 }
 
-async function chicks(nest, year) {
 
+// The following code will then enumerate the counts of chicks for all nests
+async function chicks(nest, year) {
+  let list = "";
+  await Promise.all(network(nest).map(async name => {
+    list += `${name}: ${
+      await anyStorage(nest, name, `chicks in ${year}`)
+    }\n`;
+  }));
+  return list;
+}
+
+// This code is broken in that it will always produce a single output which is
+// the nest that was slowest to respond. This occurs because the += operator
+// takes the current value of list when the statement starts executing and then,
+// when the await finishes, sets the list binding to be the value plus the added
+// string. But between the time the statement starts executing and when it finishes
+// theres an asynchronous gap and the map expression runs before theres anything
+// added to list, so each of the += operators start from an empty string and ends
+// up, when it's storage retrieval finishes, setting list to a single lined 
+// list, the result of adding it's line to the empty string.
+
+// This error can be avoided by returning the lines from the mapped function and
+// calling .join() on the result of Promise.all, instead of building the list by
+// changing a binding.
+async function chicks(nest, year) {
+  let lines = network(nest).map(async name => {
+    return name + ": " +
+      await anyStorage(nest, name, `chicks in ${year}`);
+  });
+  return (await Promise.all(lines)).join("\n");
 }
