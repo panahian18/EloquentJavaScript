@@ -331,7 +331,7 @@ request({
     // A file server
 
 // Here we will create an example that will bridge the gap between an HTTP
-// servers and the file system to create an HTTP server that allows remote
+// server and the file system, to create an HTTP server that allows remote
 // access to a file system. Such a server can allow web apps to store and share
 // info, give multiple people shared access to files, etc.
 
@@ -345,8 +345,8 @@ request({
 
 // We will build our program one piece at a time, using an object called methods
 // to store the functions that will handle the various HTTP methods. Method
-// handlers are async functions that get the request object as argument and
-// return a promise that resolves to an object that describes the reponse.
+// handlers are async functions that get the request object as an argument and
+// returns a promise that resolves to an object that describes the response.
 
 const {createServer} = require("http");
 const methods = Object.create(null);
@@ -360,7 +360,7 @@ createServer((request, response) => {
         })
         .then(({body, status = 200, type = "text/plain"}) => {
             response.writeHead(status, {"Content-Type": type});
-            if (body && body.pipe) body.pipe(reponse);
+            if (body && body.pipe) body.pipe(response);
             else response.end(body);
         });
 }).listen(8000);
@@ -373,32 +373,32 @@ async function notAllowed(request) {
 }
 
 // This sets up a server that will check for a http method and execute it, so
-// far however, we have not added any so it will just call notAllowed. If the
+// far, however, we have not added any so it will just call notAllowed. If the
 // request handler's promise is rejected, the catch call translates the error
 // into a response object.
 
 // The status and type fields of the response description may be omitted, in
-// which case, a defualt of 200 and "text/plain" is assumed, respectively. When
+// which case, a default of 200 and "text/plain" is assumed, respectively. When
 // the value of body is a readable stream, then it will have a pipe method that
 // is used to forward all content from a readable stream into a writable stream.
 // If not then the value of body is assumed to be null, a string, or a buffer
 // and it is passed directly to the response's end method.
 
 // To figure out which file path corresponds to a request URL, the urlPath
-// function uses Node's built-in url module to parse the URL. It takes it's path
+// function uses Node's built-in url module to parse the URL. It takes its path
 // name, which will be something like "/file.txt", decodes it to get rid of the
-// %20-style escape codes, and resolves it relative to the program's working dir
+// %20-style escape codes, and resolves it relative to the program's working dir.
 
 // One of the precautions we must take is to make sure that clients are not
 // trying to access parts of the file system we don't want them to. For example,
-// paths that include ../ refor to a parent directory. To avoid this problem,
+// paths that include ../ refer to a parent directory. To avoid this problem,
 // urlPath uses the resolve function from the path module, which resolves
 // relative paths. The sep binding from the path package is the system's separator
 // in this case, it's /.
 
 // When the path doesn't start with the base directory, the function throws an
-// error response object, using the http status code that access to the
-// resource is forbidden.
+// error response object, using the http status code indicating that access to
+// the resource is forbidden.
 
 const {parse} = require("url");
 const {resolve, sep} = require("path");
@@ -406,19 +406,130 @@ const {resolve, sep} = require("path");
 const baseDirectory = process.cwd();
 
 function urlPath(url) {
-    let {pathname} = parse(url);
-    let path = resolve(decodeURIComponent(pathname).slice(1));
-    if (path != baseDirectory && !path.startsWith(baseDirectory + sep)) {
+    let {pathname} = parse(url);  // Gets rid of %20 style escape codes
+    let path = resolve(decodeURIComponent(pathname).slice(1)); // Returns an asolute path, and removes the / at the end
+    if (path != baseDirectory && !path.startsWith(baseDirectory + sep)) {  // Checks to see if it is the current dir and if it starts with /
         throw {status: 403, body: "Forbidden"};
     }
     return path;
 }
 
 // Here we set up the GET method to return a list of files when reading a
-// directory or a file's content. Since out file can be anything, our server
+// directory or a file's content. Since our file can be anything, our server
 // has to figure out the content type. Here we use the npm package MIME, which
 // tells us the mime type (e.g. text/plain) for a lot of different file ext.
 
 $ npm install mime@2.2.0 // this command installs mime
 
-//  
+// When a requested file does not exists, the correct HTTP status code to return
+// is 404. We'll use the stat function, which looks up information about a file,
+// to find out both whether the file exists and whether it is a directory. Because
+// it is has to touch the disk and thus might take a while, it is asyncrhonous.
+// This means it has to be imported from promises instead of directly from fs.
+
+const {createReadStream} = require("fs");
+const {stat, readdir} = require("fs").promises;
+const mime = require("mime");
+
+methods.GET = async function(request)
+    let path = urlPath(request.url);
+    let stats;
+    try {
+        async stats(path);
+    } catch (error) {
+        if (error.code != "ENOENT") throw error;
+        else return {status: 404, body: "File not found"};
+    }
+    if (stats.isDirectory()) {
+        return {body: (await readdir(path)).join("\n")};
+    } else {
+        return {body: createReadStream(path),
+                type: mime.getType(path)};
+    }
+};
+
+// If the file does not exist, it will throw the "ENOENT" error code (from unix).
+// Otherwise, we can tell if the file is a directory by using isDirectory() from
+// stats, which is the object returned by stat, which can tell us a number of
+// things about the file, including size (size property), and its modification
+// date (mtime property).
+
+// We use readdir to read the array of files in a directory and return it to the
+// client. For normal files, we create a readble stream with createReadStream
+// and return that as the body, along with the content type that the mime
+// package gives us for the file's name.
+
+// The code to handle DELETE requests is the following:
+
+const {rmdir, unlink} = require("fs").promises;
+
+methods.DELETE = async function(request) {
+    let path = urlPath(request.url);
+    let stats;
+    try {
+        stats = await stat(path);
+    } catch (error) {
+        if (error.code != "ENOENT") throw error;
+        else return {status: 204};
+    }
+    if (stats.isDirectory()) await rmdir(path);
+    else await unlink(path);
+    return {status: 204};
+}
+
+// When an HTTP response does not contain any data, the status code 204 ("no
+// content") can be used to indicate this. Since the response to deletion doesn't
+// need to transmit any information beyond whether the operation succeeded, that
+// is a sensible thing to return here.
+
+// It's important to note that deleting a nonexistent file returns a success
+// status code, rather than an error. This is because you could say that if the
+// object to be deleted is not there then the request's objective is already
+// fulfilled. The HTTP standard encourages us to make requests indempotent, which
+// means making the same request multiple times produces the same result as making
+// it once.  
+
+//The code to handle PUT requests:
+
+const {createWriteStream} = require("fs");
+
+function pipeStream(from, to) {
+    return new Promise((resolve, reject) => {
+        from.on("error", reject);
+        to.on("error", reject);
+        to.on("finish", resolve);
+        from.pipe(to);
+    });
+}
+
+methods.PUT = async function(request) {
+    let path = urlPath(request.url);
+    await pipeStream(request, createWriteStream(path));
+    return {status: 204};
+};
+
+// Here we don't check if a file exists, if it does we just overwrite it. We use
+// pipe to stream data from a readable stream to a writable stream, in this case
+// from the request to the file. We also wrap pipe to return a promise since it
+// doesn't do so by default. When something goes wrong with opening the file,
+// createWriteStream will still return a stream, but that stream will fire an
+// "error" event. The output stream to the request may also fail, e.g. in a
+// network failure, so we wire up both streams' error events to reject the promise.
+// When pipe is done, it will close the output stream, which will fire a "finish"
+// event. That's the point where we can successfully resolve the promise.
+
+// We can use the Unix command curl to make HTTP requests. Below, we use the -X
+// option to set the request's method, and -d is used to include a request body.
+
+$ curl http://localhost:8000/file.txt
+File not found
+$ curl -X PUT -d hello http://localhost:8000/file.txt
+$ curl http://localhost:8000/file.txt
+hello
+$ curl -X DELETE http://localhost:8000/file.txt
+$ curl http://localhost:8000/file.txt
+File not found
+
+// The first request for file.txt fails since the file does not exist yet. The
+// PUT request creates the file, and the next request successfully gets it. After
+// deleting the file with a DELETE request, the file is missing again.
