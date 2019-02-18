@@ -424,7 +424,7 @@ $ npm install mime@2.2.0 // this command installs mime
 // When a requested file does not exists, the correct HTTP status code to return
 // is 404. We'll use the stat function, which looks up information about a file,
 // to find out both whether the file exists and whether it is a directory. Because
-// it is has to touch the disk and thus might take a while, it is asyncrhonous.
+// it has to touch the disk and thus might take a while, it is asyncrhonous.
 // This means it has to be imported from promises instead of directly from fs.
 
 const {createReadStream} = require("fs");
@@ -487,7 +487,7 @@ methods.DELETE = async function(request) {
 // object to be deleted is not there then the request's objective is already
 // fulfilled. The HTTP standard encourages us to make requests indempotent, which
 // means making the same request multiple times produces the same result as making
-// it once.  
+// it once.
 
 //The code to handle PUT requests:
 
