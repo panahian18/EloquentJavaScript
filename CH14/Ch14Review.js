@@ -24,7 +24,7 @@
 </html>
 
 // For each box, there is an object, which we can interact with, to find out
-// things like what HTML tag is represents and which boxes and text it contains.
+// things like what HTML tag it represents and which boxes and text it contains.
 // This is called the document object model (DOM).
 
 // The global binding "document" gives us access to these objects. Its
@@ -112,7 +112,7 @@ console.log(link.href);
 
 <p>My ostrich Gertrude:</p>
 <p><img id="gertrude" src="img/ostrich.png"></p>
-
++
 <script>
   let ostrich = document.getElementById("gertrude");
   console.log(ostrich.src);
@@ -214,7 +214,7 @@ from it
 // Some element attributes, like href, can be accessed through a property of the
 // same name on the element's DOM object. HTML lets you set up whatever element
 // property you want but this doesn't mean you can access it as a property of the
-// element node. Instead you have to use setAttribute and getAttribute.
+// element node. Instead, you have to use setAttribute and getAttribute.
 
 <p data-classified="secret">The launch code is 00000000.</p>
 <p data-classified="unclassified">I have two feet.</p>
@@ -222,7 +222,7 @@ from it
 <script>
   let paras = document.getElementsByTagName("p");
   for (let para of Array.from(paras)) {
-      if (para.getAttribute("data-classified") == "classified") {
+      if (para.getAttribute("data-classified") == "secret") {
         para.remove();
       }
   }
@@ -252,7 +252,7 @@ from it
 <script>
   let para = document.getElementsByTagName("p")[0];
   console.log("clientHeight:", para.clientHeight);
-  console.log("clientWidth:", para.offsetHeight);
+  console.log("offsetHeight:", para.offsetHeight);
 </script>
 
 // To find the precise position of an element on the screen, use the
@@ -276,11 +276,10 @@ from it
 <p><a href="." style="color: green">Green link</a></p>
 
 // The display property controls whether an element is displayed as a block
-// or an inline element. the "display: none" prevents an element from showing
-// up on the screen. It is often preferable to removing since we can add again.
+// or an inline element. The "display: none" prevents an element from showing
+// up on the screen. It is often preferable to removing since we can it add again.
 
 This text is displayed <strong>inline</strong>
-
 <strong style="display: block">as a block</strong>, and
 <strong style="display: none">not at all</strong>
 
@@ -370,9 +369,9 @@ p.a.b#main {
 // still not a real array. The querySelector method works the same as the one
 // with all but it only returns the first match.
 
-    // Positioning and animating
+    // Positioning and Animating
 
-// The "position" style property is used to influence the layout the elements in
+// The "position" style property is used to influence the layout of elements in
 // a document. Its default value static, means that the element sits in its normal
 // place in the document. When the value is set to relative, the top and left
 // style properties can be used to move it relative to that normal place.
@@ -391,7 +390,7 @@ p.a.b#main {
   let cat = document.querySelector("img");
   let angle = Math.PI / 2;
   let lastTime = null;
-  function animate(time) {
+  function animate(time, lastTime) {
     if (lastTime != null) {
       angle += (time - lastTime) * .001;
     }
@@ -421,7 +420,7 @@ p.a.b#main {
 // The circular movement is done using the Math.sin for height, and Math.cos for
 // width, the angles are measured in radians, with 2pi (6.28) as the max, as it
 // modulos when it goes over. The cat animation code keeps a counter, angle, for
-// the current current angle of the animation and increments at every call.
+// the current angle of the animation and increments at every call.
 
 // Styles also need units, in this case we use px for pixels, if no unit is
 // provided then the browser will just ignore it.
