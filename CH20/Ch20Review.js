@@ -2,13 +2,9 @@
 
 // Node.js is a program that allows us to run javascript outside of the browser.
 // It can be used to write anything from command line tools to HTTP servers.
-
 // One of the most difficult aspects of writing programs that communicate over
 // a network is managing input and output, that is data going to and from the
-// network and hard drive. Especially in a way that schedules it efficiently.
-// In such a program, asynchronous programming is often helpful, as it allows
-// the program to send and receive data from multiple devices at the same time
-// without complicated thread management and synchronization.
+// network and hard drive.
 
 // Node was initially conceived for the purpose of making asynchronous
 // programming easy and convenient. Asynchronous programs allow the program to
@@ -117,7 +113,7 @@ $ node
 // that is not already listed as a dependency, NPM will add it to package.json.
 
 // A package.json file lists both the program's own version and versions for
-// its dependencies. Packages evolve and eventually, code written for one package
+// its dependencies. Packages evolve and eventually code written for one package
 // may not work with a modified version of the packge. NPM has a schema that
 // packages must follow, called semantic versioning. A semantic version consists
 // of 3 numbers separated by commas, e.g. 2.3.0.
@@ -177,12 +173,12 @@ writeFile("graffiti.txt", "Node was here", err => {
 // functions as fs but uses promises instead of callbacks.
 
 const {readFile} = require("fs").promises;
-readFile("file.txt", "utf-8")
+readFile("file.txt", "utf8")
     .then(text => console.log("The file contains:", text));
 
 // Many of the functions in fs have a synchronous variant, which has the same
 // name but with Sync added to the end. Doing this however, will cause the
-// entire program to stop while the syncrhonous aciton is being performed
+// entire program to stop while the syncrhonous action is being performed
 // E.g. readFileSync:
 
 const {readFileSync} = require("fs");
@@ -191,7 +187,7 @@ console.log("The file contains:",
 
     // The HTTP module
 
-// Another very important module is called http. It provides functionality for
+// Another very important module the http module. It provides functionality for
 // running servers and making HTTP requests. This is all it takes to start an
 // HTTP server:
 
@@ -210,9 +206,9 @@ console.log("Listening to (port 8000)");
 // at http://localhost:8000/hello, this will make the browser make a request to
 // our server.
 
-// The function passed to creatServer is the function that will be called
+// The function passed to createServer is the function that will be called
 // everytime a client connects to the server. The request and response bindings
-// are objects that represent the incoming and outgoing data. The fist contains
+// are objects that represent the incoming and outgoing data. The first contains
 // information about the request, such as its url property, which tells us to
 // what URL the request was made. When that page is opened in the browser, it
 // sends a request to your own computer, this causes the server to run and send
@@ -268,7 +264,7 @@ requestStream.end();
 
     // Streams
 
-// So far we have seen two intances of writable streams in the http examples,
+// So far we have seen two instances of writable streams in the http examples
 // above, the request and response objects. These writable streams are a widely
 // used concept in Node, these objects have a write method, which can be passed
 // a Buffer or a string. The end method closes the stream, it can optionally
@@ -285,7 +281,7 @@ requestStream.end();
 // response. Reading from a stream is done using event handlers, rather than
 // methods.
 
-// Objects that emit events in Node have a method called on that is similar to
+// Objects that emit events in Node have a method called "on" that is similar to
 // the addEventListener method in the browser. You give it an event name and then
 // a function, and it will register that function to be called whenever the given
 // event occurs.
@@ -302,7 +298,7 @@ requestStream.end();
 const {createServer} = require("http");
 createServer((request, response) => {
     response.writeHead(200, {"Content-Type": "text/plain"});
-    request.one("data", chunk => {
+    request.on("data", chunk => {
         response.write(chunk.toString().toUpperCase()));
     request.on("end", () => response.end());
 }).listen(8000);
@@ -406,8 +402,8 @@ const {resolve, sep} = require("path");
 const baseDirectory = process.cwd();
 
 function urlPath(url) {
-    let {pathname} = parse(url);  // Gets rid of %20 style escape codes
-    let path = resolve(decodeURIComponent(pathname).slice(1)); // Returns an asolute path, and removes the / at the end
+    let {pathname} = parse(url);  // Gets rid of %20 style escape codes and returns everything past .com
+    let path = resolve(decodeURIComponent(pathname).slice(1)); // Returns an asolute path, removes anything like /../, removes the / at the end, slice(1) and removes the / at the beginning
     if (path != baseDirectory && !path.startsWith(baseDirectory + sep)) {  // Checks to see if it is the current dir and if it starts with /
         throw {status: 403, body: "Forbidden"};
     }
@@ -421,7 +417,7 @@ function urlPath(url) {
 
 $ npm install mime@2.2.0 // this command installs mime
 
-// When a requested file does not exists, the correct HTTP status code to return
+// When a requested file does not exist, the correct HTTP status code to return
 // is 404. We'll use the stat function, which looks up information about a file,
 // to find out both whether the file exists and whether it is a directory. Because
 // it has to touch the disk and thus might take a while, it is asyncrhonous.
@@ -431,7 +427,7 @@ const {createReadStream} = require("fs");
 const {stat, readdir} = require("fs").promises;
 const mime = require("mime");
 
-methods.GET = async function(request)
+methods.GET = async function(request) {
     let path = urlPath(request.url);
     let stats;
     try {
@@ -455,7 +451,7 @@ methods.GET = async function(request)
 // date (mtime property).
 
 // We use readdir to read the array of files in a directory and return it to the
-// client. For normal files, we create a readble stream with createReadStream
+// client. For normal files, we create a readable stream with createReadStream
 // and return that as the body, along with the content type that the mime
 // package gives us for the file's name.
 
