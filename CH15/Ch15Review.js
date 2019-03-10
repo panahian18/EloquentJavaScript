@@ -60,7 +60,7 @@
 
 // Event handler functions are also passed an argument, the event object. This
 // object holds additional information about the event. E.g. if we want to know
-// which mouse button was clicked, we would have to look the event object.
+// which mouse button was clicked, we would have to look at the event object.
 // Different event types have different event objects, although every event
 // object has a type event with a string identifying the event type (e.g. "clicK")
 
@@ -90,8 +90,8 @@
 
 // At any point, an event handler can call the stopPropagation method on the event
 // object to prevent handlers further up from receiving it. This is useful for
-// when you have a button inside another clickable element and you don't clicks
-// from the button to affect the outer element's click behaviour.
+// when you have a button inside another clickable element and you don't want
+// clicks from the button to affect the outer element's click behaviour.
 
 // The following registers "mousedown" handlers on both a button and the paragraph
 // around it. When the button is clicked with the right button, it will call
@@ -102,7 +102,7 @@
 <script>
     let para = document.querySelectorAll("p");
     let button = document.querySelectorAll("button");
-    button.addEventListener("mousedown", () => {
+    para.addEventListener("mousedown", () => {
         console.log("Handler for paragraph");
     });
     button.addEventListener("mousedown", event => {
@@ -173,7 +173,7 @@
     });
 </script>
 
-// The keydown event not only fires when the key is pressed down, but also if the
+// The keydown event not only fires when the key is pressed down, but also if
 // the key is held, then it fires everytime the key repeats. This fact requires
 // caution, e.g. if you add a button to the DOM when a key is pressed and remove
 // it again when the key is released, then you might add hundreds of keys when the
@@ -185,7 +185,7 @@
 // event with the key value being a string "Enter". Modifier keys such as SHIFT,
 // CONTROL, ALT, and META, will generate key events just like normal keys. But
 // you can also look to see if these keys are being pressed by checking the
-// , shiftKey, ctrlKey, altKey, and metaKey properties.
+// shiftKey, ctrlKey, altKey, and metaKey properties.
 
 <p>Press Control-Space to continue.</p>
 <script>
@@ -283,7 +283,7 @@
     });
 
     function moved(event) {
-        if (event.button == 0) {
+        if (event.buttons == 0) {
             window.removeEventListener("mousemove", moved);
         } else {
             let dist = event.clientX - lastX;
@@ -434,7 +434,7 @@ window.addEventListener("touchend", update);
 // events do not propagate.
 
 // When a page is closed or navigated away from (e.g. following a link), a
-// "beforeunload" event fires. This is to prevent the accidental lose of work
+// "beforeunload" event fires. This is to prevent the accidental loss of work
 // when closing a document. Preventing the page from unloading is not done by
 // preventDefault, instead it is done by returning a non-null value from the
 // handler. When that happens, the browser shows the user a dialog asking if they
@@ -492,14 +492,14 @@ let bombTimer = setTimeout(() => {
     console.log("BOOM!");
 }, 500);
 
-if (Math.random() < (0.5) { // 50% chance
+if (Math.random() < 0.5) { // 50% chance
     console.log("Defused.");
     clearTimeout(bombTimer);
 }
 
 // The cancelAnimationFrame function works in the same way as clearTimeout
 // calling it on a value returned by requestAnimationFrame will cancel that frame
-// (assuming it hasn;t been called already). A similar set of functions, setInterval
+// (assuming it hasn't been called already). A similar set of functions, setInterval
 // and clearInterval, are used to set timers that should repeat every X msec.
 
 let ticks = 0;
@@ -522,7 +522,7 @@ let clock = setInterval(() => {
 // If you do something nontrivial in such a handler, you can use setTimeout to
 // make sure you are not doing it too often. This is called debouncing the event.
 // One such approach is to react when a user has typed something, when they are
-// typing quickly, we wnat to wait for a pause, then output "Typed". We also
+// typing quickly, we want to wait for a pause, then output "Typed". We also
 // want to clear the previous timeout (if any) so that when events occur close
 // together, the timeout from the previous event will be canceled.
 
@@ -531,7 +531,7 @@ let clock = setInterval(() => {
     let textarea = document.querySelector("textarea");
     let timeout;
     textarea.addEventListener("input", () => {
-        cleatTimeout(timeout);
+        clearTimeout(timeout);
         timeout = setTimeout(() => console.log("Typed"), 500);
     });
 </script>
@@ -549,11 +549,11 @@ let clock = setInterval(() => {
     window.addEventListener("mousemove", event => {
         if (!scheduled) {
             setTimeout(() => {
-                document.body.text.Content =
+                document.body.textContent =
                     `Mouse at ${scheduled.pageX}, ${scheduled.pageY}`;
                 scheduled = null;
             }, 10000);
         }
         scheduled = event;
-    })
+    });
 </script>

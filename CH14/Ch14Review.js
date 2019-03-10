@@ -245,9 +245,7 @@ from it
 // offsetHeight. clientWidth and clientHeight give you the size of the space
 // ignoring the border width.
 
-<p style="border: 3px solid red">
-  "I'm boxed in"
-</p>
+<p style="border: 3px solid red">"I'm boxed in"</p>
 
 <script>
   let para = document.getElementsByTagName("p")[0];
