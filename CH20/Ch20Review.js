@@ -157,8 +157,8 @@ writeFile("graffiti.txt", "Node was here", err => {
     else console.log("File written.");
 });
 
-// Writefile does need to have a char encoding passed to it, because it assumes
-// to write out text with UTF-8.
+// Writefile does not need to have a char encoding passed to it, because it
+// assumes to write out text with UTF-8.
 
 // The fs module contains many other useful funcitons: readdir will return the
 // files in a directory as an array of strings, stat will retrieve information
@@ -248,7 +248,7 @@ requestStream.end();
 
 // The first argument to request configures the request, telling Node what server
 // to talk to, what path to request from that server, which method to use, etc.
-// The second argument is the fucntion that should be called when a response
+// The second argument is the function that should be called when a response
 // comes in. It is given an object that allows us to inspect the response, for
 // example to find out its status code.
 
@@ -298,7 +298,7 @@ requestStream.end();
 const {createServer} = require("http");
 createServer((request, response) => {
     response.writeHead(200, {"Content-Type": "text/plain"});
-    request.on("data", chunk => {
+    request.on("data", chunk =>
         response.write(chunk.toString().toUpperCase()));
     request.on("end", () => response.end());
 }).listen(8000);
@@ -403,7 +403,7 @@ const baseDirectory = process.cwd();
 
 function urlPath(url) {
     let {pathname} = parse(url);  // Gets rid of %20 style escape codes and returns everything past .com
-    let path = resolve(decodeURIComponent(pathname).slice(1)); // Returns an asolute path, removes anything like /../, removes the / at the end, slice(1) and removes the / at the beginning
+    let path = resolve(decodeURIComponent(pathname).slice(1)); // Returns an asolute path, removes anything like /../, removes the / at the end, slice(1) removes the / at the beginning
     if (path != baseDirectory && !path.startsWith(baseDirectory + sep)) {  // Checks to see if it is the current dir and if it starts with /
         throw {status: 403, body: "Forbidden"};
     }
@@ -431,10 +431,10 @@ methods.GET = async function(request) {
     let path = urlPath(request.url);
     let stats;
     try {
-        async stats(path);
+        stats = await stat(path);
     } catch (error) {
         if (error.code != "ENOENT") throw error;
-        else return {status: 404, body: "File not found"};
+        else return {status: 404, body:"File not found"};
     }
     if (stats.isDirectory()) {
         return {body: (await readdir(path)).join("\n")};

@@ -336,8 +336,8 @@
     for (let i = 0; i < event.touches.length; i++) {
         let {pageX, pageY} = event.touches[i];
         let dot = document.createElement("dot");
-        dot.style.top = pageY - 50;
-        dot.style.left = pageX - 50;
+        dot.style.top = (pageY - 50) + "px";
+        dot.style.left = (pageX - 50) + "px";
         document.body.appendChild(dot);
     }
 }
@@ -537,7 +537,7 @@ let clock = setInterval(() => {
 </script>
 
 // Giving an undefined value to clearTimeout or calling it on a timeout that has
-// already fire has no effect, so we don't have to be careful about calling it.
+// already fired has no effect, so we don't have to be careful about calling it.
 
 // In the next example, we use a different pattern so we space out responses by
 // at least a certain length of time, but we want them to fire during events, not
@@ -552,7 +552,7 @@ let clock = setInterval(() => {
                 document.body.textContent =
                     `Mouse at ${scheduled.pageX}, ${scheduled.pageY}`;
                 scheduled = null;
-            }, 10000);
+            }, 250);
         }
         scheduled = event;
     });
