@@ -29,8 +29,8 @@
 // server can send information when it needs to.
 
 // Normally, a client makes a simple HTTP request and the server comes back with a 
-// single response. Although we could WebSockets, we will keep it simple and instead 
-// use long polling, wheere clients continuously ask the server for new information 
+// single response. Although we could use WebSockets, we will keep it simple and instead 
+// use long polling, where clients continuously ask the server for new information 
 // using regular HTTP requests, and the server stalls its answer when it has nothing
 // new to report. E.g. when a user has the site open in their browser, the browser 
 // will make a request for updates and will be waiting for a response to that request.
@@ -40,7 +40,7 @@
 // To prevent connections from timing out (aborted due to a lack of activity), long 
 // polling techniques usually set a maximum time for each request, after which the 
 // server will respond anyway, even it has nothing to report, after which the client 
-// will make a new request. Periodically restarting the requerst also makes the 
+// will make a new request. Periodically restarting the request also makes the 
 // technique more robust, allowing clients to recover from temporary connection
 // failures or server problems.
 
@@ -53,12 +53,15 @@
 // the client-side system.
 
 // A GET request to /talks returns a JSON document like this:
+
+/*
 [{
     "title": "Unituning",
     "presenter": "Jamal",
     "summary": "Modifying your cycle for extra style",
     "comments": []
 }]
+*/
 
 // We create a new talk by making a PUT request to a URL like /talks/Unituning, 
 // where the part after the second slash is the title of the talk. The PUT request 
@@ -92,7 +95,7 @@ Content-Length: 72
 */
 
 // In order to support long polling, we need 2 extra headers to notify the server 
-// to delay responses if no new information is available, Etag and If-None-Match.
+// to delay responses if no new information is available, ETag and If-None-Match.
 // Servers use the ETag ("entity tag") header in a response, which has a value as 
 // a string that identifies the current version of the resource. When clients later 
 // make a request, they may make a conditional request by including an If-None-Match
@@ -165,7 +168,7 @@ module.exports = class Router {
         for (let { method, url, handler } of this.routes) { // iterate through all of the routes
             let match = url.exec(path); // if the url matches, and..
             if (!match || request.method != method) continue; // the method matches
-            let urlsParts = match.slice(1).map(decodeURIComponent); // encode all of the strings
+            let urlParts = match.slice(1).map(decodeURIComponent); // decode all of the strings
             return handler(context, ...urlParts, request); // return a response by calling the handler
         }
         return null;
@@ -217,6 +220,7 @@ class skillShareServer {
         });
     }
     start(port) {
+        console.log("Listening on port", port);
         this.server.listen(port);
     }
     stop() {
@@ -280,9 +284,9 @@ router.add("PUT", talkPath, async (server, title, request) => {
     let requestBody = await readStream(request);
     let talk;
     try { talk = JSON.parse(requestBody); }
-    catch (_) { return { status: 400, body: "invalid JSON" }; }
-    if (!talk || typeof
-        talk.presenter != "string" ||
+    catch (_) { return { status: 400, body: "Invalid JSON" }; }
+    if (!talk || 
+        typeof talk.presenter != "string" ||
         typeof talk.summary != "string") {
         return { status: 400, body: "Bad talk data" };
     }
@@ -297,26 +301,26 @@ router.add("PUT", talkPath, async (server, title, request) => {
 });
 
 // Adding a comment to a talk works similarly. We use readStream to get the content
-// of the request, validate the resulting data, and store it as a comment when it looks
-// valid.
+// of the request, validate the resulting data, and store it as a comment when it 
+// looks valid.
 
 router.add("POST", /^\/talks\/([^\/]+)\/comments$/,
     async (server, title, request) => {
         let requestBody = await readStream(request);
         let comment;
         try { comment = JSON.parse(requestBody); }
-        catch (_) { return { status: 400, body: "Invalid JSON" } }
+        catch (_) { return { status: 400, body: "Invalid JSON" }; }
 
         if (!comment ||
             typeof comment.author != "string" ||
             typeof comment.message != "string") {
             return { status: 400, body: "Invalid comment" }
         } else if (title in server.talks) {
-            server.talks[title].comment.push(comment);
+            server.talks[title].comments.push(comment);
             server.updated();
             return { status: 204 };
         } else {
-            return { status: 404, body: `No talk in '${title}' found` };
+            return { status: 404, body: `No talk '${title}' found` };
         }
     });
 
@@ -326,7 +330,7 @@ router.add("POST", /^\/talks\/([^\/]+)\/comments$/,
 // polling request. Because we have to send the array of talks in many places, we
 // define a helper function that includes an ETag in the response:
 
-skillShareServer.prototype.talkResponse = function () {
+skillShareServer.prototype.talkResponse = function() {
     let talks = [];
     for (let title of Object.keys(this.talks)) {
         talks.push(this.talks[title]);
@@ -357,18 +361,18 @@ router.add("GET", /^\/talks$/, async (server, request) => {
     }
 });
 
-// This function first checks if there are ETag and prefer headers, then it checks 
+// This function first checks if there are ETag and prefer headers, then it checks
 // if there is a valid tag that is equal to the server's version number, if there 
-// is then it returns the list of talks. If version is not current and there is no
-// prefer header, the server returns a response with a 304 status. Otherwise, with 
-// a valid prefer header, it will call the waitForChanges function with the 
-// appropriate number of seconds to wait.
+// isn't then it returns the list of talks. If there is a valid "if-none-match" 
+// tag and it matches the server version and there isn't a wait tag then it just 
+// returns a 304 status. Otherwise, if there is a wait tag, it will call the server's 
+//0 waitForChanges method with the value of the wait tag.
 
 // Callback functions are stored in the server's waiting array so that they can be
 // notified when something happens. The waitForChanges method also immediately sets
 // a timer to respond with a 304 status when the request has waited long enough.
 
-skillShareServer.prototype.waitForChanges = function (time) {
+skillShareServer.prototype.waitForChanges = function(time) {
     return new Promise(resolve => {
         this.waiting.push(resolve);
         setTimeout(() => {
@@ -382,7 +386,7 @@ skillShareServer.prototype.waitForChanges = function (time) {
 // Registering change with updated increases the version property and wakes up all
 // waiting requests.
 
-skillShareServer.prototype.updated = function () {
+skillShareServer.prototype.updated = function() {
     this.version++;
     let response = this.talkResponse();
     this.waiting.forEach(resolve => resolve(response));
@@ -425,7 +429,7 @@ new skillShareServer(Object.create(null)).start(8000);
 // The state of the application consists of the list of talks and the name of the 
 // user, which we store in a {talks, user} object. We don't allow the user to 
 // directly manipulate the state or send off HTTP requests, instead the user emits
-// actions that describe what the user trying to do.
+// actions that describe what the user is trying to do.
 
 // The handleAction function takes such an action and makes it happen, because our
 // state is so simple, the state changes are handled in the same function.
@@ -433,7 +437,7 @@ new skillShareServer(Object.create(null)).start(8000);
 function handleAction(state, action) {
     if (action.type == "setUser") {
         localStorage.setItem("userName", action.user);
-        return Object.assign({}, state, { talks: action.talks });
+        return Object.assign({}, state, { user: action.user });
     } else if (action.type == "setTalks") {
         return Object.assign({}, state, { talks: action.talks });
     } else if (action.type == "newTalk") {
@@ -463,8 +467,8 @@ function handleAction(state, action) {
 
 // The user's name is stored in localStorage so that it can be restored when the 
 // page is loaded. The actions that need to involve the server make network requests,
-// using fetch, to the HTTP interface described earlier. We use a wrapper funciton, 
-// fetchOK, which makes sures the returned promise is rejected when the server
+// using fetch, to the HTTP interface described earlier. We use a wrapper function, 
+// fetchOK, which makes sure the returned promise is rejected when the server
 // returns an error code.
 
 function fetchOK(url, options) {
@@ -541,7 +545,7 @@ function renderTalk(talk, dispatch) {
 // The submit event handler calls form.reset to clear the form's content after 
 // creating a newComment action. 
 
-// THe method we are using to render our program is long and verbose. An alternative
+// The method we are using to render our program is long and verbose. An alternative
 // is to use a JavaScript extension called JSX that allows you to write HTML in 
 // your JavaScript.
 
@@ -573,8 +577,8 @@ function renderTalkForm(dispatch) {
     // Polling
 
 // To start the app we need the current list of talks. Here we wrap the long polling
-// process with the initial load of talk since they are closely related. We take the
-// ETag from the load and set it for future loads.
+// process with the initial load of talks since they are closely related. We take 
+// the ETag from the load and set it for future loads.
 
 async function pollTalks(update) {
     let tag = undefined;
@@ -599,10 +603,10 @@ async function pollTalks(update) {
 // This is an async function so that looping and waiting for the request is easier.
 // It runs an inifinite loop that, on each iteration, retrieves the list of talks
 // - either normally or, if this isn't the first request, with the headers included
-// that make it a long polling request. 
+// that make it a long polling request.
 
-// When a request fails, it waits a moment and then tries again. The promise resolved
-// via setTimeout is a way to force the async function to wait. 
+// When a request fails, it waits a moment and then tries again. The promise 
+// resolved via setTimeout is a way to force the async function to wait. 
 
 // When the server gives back a 304 response, that means a long polling request
 // timed out, so the fucntion should just immediately start the next request. If
@@ -612,10 +616,50 @@ async function pollTalks(update) {
 
     // The Application
 
+// The following component ties the whole user interface together:
 
+class SkillShareApp {
+    constructor(state, dispatch) {
+        this.dispatch = dispatch;
+        this.talkDOM = elt("div", {className: "talks"});
+        this.dom = elt("div", null,
+                        renderUserField(state.user, dispathch),
+                        this.talkDOM,
+                        renderTalkForm(dispatch));
+        this.syncState(state);
+    }
 
+    syncState(state) {
+        if (state.talk != this.talks) {
+            this.talkDOM.textContent = "";
+            for (let talk of state.talks) {
+                this.talkDOM.appendChild(
+                    renderTalk(talk, this.dispatch));
+            }
+            this.talks = state.talks;
+        }
+    }
+}
 
+function runApp() {
+    let user = localStorage.getItem("userName") || "Anon";
+    let state, app;
+    function dispatch(action) {
+        state = handleAction(state, action);
+        app.syncState(state);
+    }
+    pollTalks(talks => {
+        if (!app) {
+            state = { user, talks };
 
-// 7-8 finish
-// 8-10 review pt.2  
-// 369 - 386
+            app = new SkillShareApp(state, dispatch);
+            document.body.appendChild(app.dom);
+        } else {
+            dispatch({ type: "setTalks", talks });
+        }
+    }).catch(reportError);
+}
+
+// We can start the application like this:
+
+runApp();
