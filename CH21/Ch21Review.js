@@ -623,14 +623,14 @@ class SkillShareApp {
         this.dispatch = dispatch;
         this.talkDOM = elt("div", {className: "talks"});
         this.dom = elt("div", null,
-                        renderUserField(state.user, dispathch),
+                        renderUserField(state.user, dispatch),
                         this.talkDOM,
                         renderTalkForm(dispatch));
         this.syncState(state);
     }
 
     syncState(state) {
-        if (state.talk != this.talks) {
+        if (state.talks != this.talks) {
             this.talkDOM.textContent = "";
             for (let talk of state.talks) {
                 this.talkDOM.appendChild(
@@ -642,7 +642,7 @@ class SkillShareApp {
 }
 
 function runApp() {
-    let user = localStorage.getItem("userName") || "Anon";
+    let user = localStorage.getItem("userName" || "Anon");
     let state, app;
     function dispatch(action) {
         state = handleAction(state, action);
