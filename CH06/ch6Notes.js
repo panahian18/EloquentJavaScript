@@ -337,3 +337,7 @@ var SymmetricMatrix = class SymmetricMatrix extends Matrix {
 
 // invoking the new SymmetricMatrix class
 var Matrix = new SymmetricMatrix(5, (x, y) => `${x}, ${y}`);
+
+
+// Objects come from the object prototype, arrays from the Arary prototype and 
+// functions from the Function prototype. 

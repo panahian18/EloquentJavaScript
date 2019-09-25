@@ -91,6 +91,7 @@ Last-Modified: Mon, 08 Jan 2018 10:29:45 GMT
 // HTML pages may also include forms, which allow users to fill out information
 // and send it to the server. This is an example of a form.
 
+/*
 <html>
 <form method="GET" action="example/message.html">
     <p>Name: <input type="text" name="name"></p>
@@ -98,6 +99,7 @@ Last-Modified: Mon, 08 Jan 2018 10:29:45 GMT
     <p><button type="submit">Send</button></p>
 </form>
 </html>
+*/
 
 // The above describes 2 fields, one small asking for a name and a larger
 // one to write a message in. When you click the Send button, the form is
@@ -262,7 +264,7 @@ Access-Control-Allow-Origin: *
 // A web form consists of any number of input fields grouped in a <form> tag.
 // HTML allows several different styles of fields, ranging from on/off checkboxes,
 // to drop-down menus, and fields for text input. A lot of field types use the
-// <input> tag. This tag's attribute is used to select the field's style. These
+// <input> tag. This tag's type attribute is used to select the field's style. These
 // are some of the <input> types:
 
     // text         A single-line text field
