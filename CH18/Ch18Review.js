@@ -620,7 +620,7 @@ function readFileText(file) {
     // Storing data client-side
 
 // So far, we have looked at simple HTML pages, which are useful for small apps.
-// However, these applicaitons cannot hold data between sessions, as JavaScript
+// However, these applications cannot hold data between sessions, as JavaScript
 // bindings will be thrown out every time the page is closed. Another method of
 // data storage is the use of the localStorage object, which can survive page reloads.
 
@@ -688,5 +688,3 @@ Notes: <select></select> <button>Add</button><br>
 
 // sessionStorage is an alternative to localStorage, which only saves data for the
 // current sessions, so whenever the browser is closed, the data is lost.
-
-    // Summary
